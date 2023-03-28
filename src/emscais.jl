@@ -95,7 +95,8 @@ function emscais_local_adapt!(
 )
     rv_c = zeros(length(proposals), length(proposals[begin]), length(proposals[begin]))
     rv_m = zeros(length(proposals), length(proposals[begin]))
-    for proposal_index = 1:length(proposals)
+    Threads.@threads for proposal_index = 1:length(proposals)
+    # for proposal_index = 1:length(proposals)
         @views _samples = samples[current_iteration, proposal_index, :, :]
         @views p_samples = [_samples[i, :] for i in 1:samples_each]
         @views _weights = weights[current_iteration, proposal_index, :]
@@ -108,9 +109,9 @@ function emscais_local_adapt!(
         _degen_flag = (_ess <= N_t)
 
         if _degen_flag
-            transformed_weights[current_iteration, proposal_index, :] .= _weights .^ inv(γ)
+            @views transformed_weights[current_iteration, proposal_index, :] .= _weights .^ inv(γ)
         else
-            transformed_weights[current_iteration, proposal_index, :] .= _weights
+            @views transformed_weights[current_iteration, proposal_index, :] .= _weights
         end
 
         @views _transformed_weights = transformed_weights[current_iteration, proposal_index, :]
@@ -129,8 +130,8 @@ function emscais_local_adapt!(
         #         (_samples[sample_index, :] .- local_mean) * transpose(_samples[sample_index, :] .- local_mean)
         # end
 
-        W_regular = 1.0 .- sum(norm_weights .^ 2)
-        W_trans = 1.0 .- sum(norm_t_weights .^ 2)
+        @views W_regular = 1.0 .- sum(norm_weights .^ 2)
+        @views W_trans = 1.0 .- sum(norm_t_weights .^ 2)
 
         @views _cov_arr = [i * i' for i in mean_diff]
 
@@ -163,7 +164,7 @@ function emscais_local_adapt!(
             #     display(is_cov2)
             # end
 
-        Σ = (1.0 .- β) .* proposals[proposal_index].Σ .+ β .* (1 - η) .* is_cov1 .+ β .* η .* is_cov2
+        @views Σ = (1.0 .- β) .* proposals[proposal_index].Σ .+ β .* (1 - η) .* is_cov1 .+ β .* η .* is_cov2
         rv_c[proposal_index, :, :] .= Σ
         rv_m[proposal_index, :] .= local_mean
     end
@@ -172,7 +173,8 @@ end
 
 function emscais_global_adapt!(log_target; proposals, HMC_args)
     rv_m = zeros(length(proposals), length(proposals[begin]))
-    for proposal_index = 1:length(proposals)
+    Threads.@threads for proposal_index = 1:length(proposals)
+    # for proposal_index = 1:length(proposals)
         rv_m[proposal_index, :] = hmc4emscais!(proposals[proposal_index].μ, log_target; p_idx = proposal_index, HMC_args...)
     end
     return rv_m

@@ -2,7 +2,7 @@ using LinearAlgebra
 using Distributions
 using QuasiMonteCarlo
 
-function init_proposals(dim, n_proposals; lims = (-2, 2), σ = 1.0, _rand_ = false)
+function init_proposals(dim, n_proposals; lims = (-2, 2), σ = 1.0, _rand_ = false) 
     proposals = Vector{MvNormal}(undef, n_proposals)
     # plan = randomLHC(n_proposals, dim)
     # plan = scaleLHC(plan, [lims for d in 1:dim])
