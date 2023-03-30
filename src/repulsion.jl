@@ -3,6 +3,7 @@ using InvertedIndices
 
 @inline function coulomb_repulsion(θ, proposals, p_idx; K = 0.1, self_norm = false)
     # assuming mvnormal
+    # @info("repulsion eval")
     force = zero(θ)
     _p_det = sqrt(det(proposals[p_idx].Σ))
     for proposal in proposals[Not(p_idx)]
